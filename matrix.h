@@ -1,6 +1,8 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <iostream>
+
 
 /*******************************************************************************************************
 CLASS DEFINITION
@@ -29,8 +31,8 @@ class matrix2 {         //template class for 2d matrix
         const T& operator() (int r, int c) const;
 
         // get number of rows and columns
-        int rows();
-        int cols();
+        int r();
+        int c();
 
         // overload == operator
         bool operator== (const matrix2<T>& rhs);
@@ -57,9 +59,8 @@ class matrix2 {         //template class for 2d matrix
 CONSTRUCTORS / DESTRUCTORS
 *******************************************************************************************************/
 // default constructor
-template <class T> matrix2<T>::matrix2(): rows(1), cols(1), num_elems(1) {
-    data = new T[1];
-    data[0] = 0.0;
+template <class T> matrix2<T>::matrix2(): rows(0), cols(0), num_elems(0) {
+    data = nullptr;
 }
 
 // parametrized constructor, no data
@@ -79,7 +80,7 @@ template <class T> matrix2<T>::matrix2(int r, int c, const T* d): rows(r), cols(
 }
 
 // copy constructor
-template <class T> matrix2<T>::matrix2(const matrix2<T>& obj): rows(obj.row), cols(obj.col), num_elems(obj.num_elems) {
+template <class T> matrix2<T>::matrix2(const matrix2<T>& obj): rows(obj.rows), cols(obj.cols), num_elems(obj.num_elems) {
     data = new T[num_elems];
     for(int i = 0; i < num_elems; i++) {
         data[i] = obj.data[i];
@@ -91,37 +92,40 @@ template <class T> matrix2<T>::~matrix2() {
     if(data != nullptr) delete[] data;
 }
 
+
 /*******************************************************************************************************
 MEMORY ACCESS OPERATORS
 *******************************************************************************************************/
 // indexing function
 template <class T> int matrix2<T>::index(int r, int c) {
-    if(r >= row || c >= col || r < 0 || c < 0) return -1;
-    else return r * col + c;
+    if(r >= rows || c >= cols || r < 0 || c < 0) return -1;
+    else return r * cols + c;
 }
 
 // setter
 template <class T> T& matrix2<T>::operator() (int r, int c) { 
     int ind = index(r, c);
-    if(ind < 0) return nullptr;
+    if(ind < 0) return *(new T());
     else return data[ind];
 }
 
 // getter
 template <class T> const T& matrix2<T>::operator() (int r, int c) const { 
     int ind = index(r, c);
-    if(ind < 0) return 0;
+    if(ind < 0) return 0.0;
     else return data[ind];
 }
+
 
 /*******************************************************************************************************
 GETTERS FOR ROWS AND COLUMNS
 *******************************************************************************************************/
 //get rows
-template <class T> int matrix2<T>::rows() { return rows; }
+template <class T> int matrix2<T>::r() { return rows; }
 
 //get columns
-template <class T> int matrix2<T>::cols() { return cols; }
+template <class T> int matrix2<T>::c() { return cols; }
+
 
 /*******************************************************************************************************
 OPERATOR OVERLOADS
@@ -129,7 +133,7 @@ OPERATOR OVERLOADS
 
 // the == operator
 template <class T> bool matrix2<T>::operator== (const matrix2<T>& rhs) {
-    if( (row != rhs.rows) || (col != rhs.cols) ) return false;
+    if( (rows != rhs.rows) || (cols != rhs.cols) ) return false;
 
     for(int i = 0; i < num_elems; i++) {
         if(data[i] != rhs.data[i]) return false;
@@ -140,7 +144,7 @@ template <class T> bool matrix2<T>::operator== (const matrix2<T>& rhs) {
 // matrix + matrix
 template <class U> matrix2<U> operator+ (const matrix2<U>& lhs, const matrix2<U>& rhs) {
     if(lhs.rows != rhs.rows || lhs.cols != rhs.cols) return nullptr;
-    matrix2 ans(lhs.rows, lhs.cols);
+    matrix2<U> ans(lhs.rows, lhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs.data[i] + rhs.data[i];
     }
@@ -149,7 +153,7 @@ template <class U> matrix2<U> operator+ (const matrix2<U>& lhs, const matrix2<U>
 
 // scalar + matrix
 template <class U> matrix2<U> operator+ (const U& lhs, const matrix2<U>& rhs) {
-    matrix2 ans(rhs.rows, rhs.cols);
+    matrix2<U> ans(rhs.rows, rhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs + rhs.data[i];
     }
@@ -158,7 +162,7 @@ template <class U> matrix2<U> operator+ (const U& lhs, const matrix2<U>& rhs) {
 
 // matrix + scalar
 template <class U> matrix2<U> operator+ (const matrix2<U>& lhs, const U& rhs) {
-    matrix2 ans(lhs.rows, lhs.cols);
+    matrix2<U> ans(lhs.rows, lhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs.data[i] + rhs;
     }
@@ -168,7 +172,7 @@ template <class U> matrix2<U> operator+ (const matrix2<U>& lhs, const U& rhs) {
 // matrix - matrix
 template <class U> matrix2<U> operator- (const matrix2<U>& lhs, const matrix2<U>& rhs) {
     if(lhs.rows != rhs.rows || lhs.cols != rhs.cols) return nullptr;
-    matrix2 ans(lhs.rows, lhs.cols);
+    matrix2<U> ans(lhs.rows, lhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs.data[i] - rhs.data[i];
     }
@@ -177,7 +181,7 @@ template <class U> matrix2<U> operator- (const matrix2<U>& lhs, const matrix2<U>
 
 // scalar - matrix
 template <class U> matrix2<U> operator- (const U& lhs, const matrix2<U>& rhs) {
-    matrix2 ans(lrhs.rows, rhs.cols);
+    matrix2<U> ans(rhs.rows, rhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs - rhs.data[i];
     }
@@ -186,7 +190,7 @@ template <class U> matrix2<U> operator- (const U& lhs, const matrix2<U>& rhs) {
 
 // matrix - scalar
 template <class U> matrix2<U> operator- (const matrix2<U>& lhs, const U& rhs) {
-    matrix2 ans(lhs.rows, lhs.cols);
+    matrix2<U> ans(lhs.rows, lhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs.data[i] - rhs;
     }
@@ -195,12 +199,13 @@ template <class U> matrix2<U> operator- (const matrix2<U>& lhs, const U& rhs) {
 
 // matrix * matrix
 template <class U> matrix2<U> operator* (const matrix2<U>& lhs, const matrix2<U>& rhs) {
-    if(lhs.cols != rhs.rows) return nullptr;
-    matrix2 ans(lhs.rows, rhs.cols);
+    if(lhs.cols != rhs.rows) return *(new matrix2<U>());
+    matrix2<U> ans(lhs.rows, rhs.cols);
     for(int i = 0; i < ans.rows; i++) {
         for(int j = 0; j < ans.cols; j++) {
+            ans.data[i*ans.cols + j] = 0;
             for(int k = 0; k < lhs.cols; k++) {
-                ans(i,j) += lhs(i, k) * rhs(k, j);
+                ans.data[i*ans.cols + j] += lhs.data[i*lhs.cols + k] * rhs.data[k*rhs.cols + j];
             }
         }
     }
@@ -209,7 +214,7 @@ template <class U> matrix2<U> operator* (const matrix2<U>& lhs, const matrix2<U>
 
 // scalar * matrix
 template <class U> matrix2<U> operator* (const U& lhs, const matrix2<U>& rhs) {
-    matrix2 ans(rhs.rows, rhs.cols);
+    matrix2<U> ans(rhs.rows, rhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs * rhs.data[i];
     }
@@ -218,7 +223,7 @@ template <class U> matrix2<U> operator* (const U& lhs, const matrix2<U>& rhs) {
 
 // matrix * scalar
 template <class U> matrix2<U> operator* (const matrix2<U>& lhs, const U& rhs) {
-    matrix2 ans(lhs.rows, lhs.cols);
+    matrix2<U> ans(lhs.rows, lhs.cols);
     for(int i = 0; i < ans.num_elems; i++) {
         ans.data[i] = lhs.data[i] * rhs;
     }
