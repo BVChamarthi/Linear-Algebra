@@ -23,7 +23,7 @@ class matrix2 {         //template class for 2d matrix
         matrix2(int r, int c);
         matrix2(int r, int c, const T* d);
         matrix2(const matrix2<T>& obj);
-
+        
         // destructor
         ~matrix2();
 
@@ -61,12 +61,21 @@ class matrix2 {         //template class for 2d matrix
 
         // functions for calculating the inverse
         static matrix2<T> generateIdentity(int size);               // generates identity matrix of given size
+        matrix2<T> join(matrix2<T> mat);                            // creates a new matrix by joining this with mat
         void switchRows(int r1, int r2);                            // r1 <-> r2
         void multiplyToRow(int r, const T m);                       // r -> m*r
         void addMultipleToRow(int d, int s, const T m);             // d -> d + m*s
 
-        int getNonZeroElem(int c, int sr);                          // gets row value of 1st non-zero elem in column c,
-                                                                    // starts searching from row sr
+        int getNonZeroElem(int sr, int c);                          // gets row value of 1st non-zero elem in
+                                                                    // column c, starts searching from row sr
+        bool swapWithFirstNonZeroElem(int sr, int c);               // trys to swap sr with the first row under
+                                                                    // it with a non-zero element in column c
+        bool zeroOutElem(int ref_r, int dst_r, int c);              // zero out element (dst_r, c) by
+                                                                    // subtracting out row ref_r from dst_r
+        bool zeroOutCol(int ref_r, int c);                          // zero out all other elements in column c
+                                                                    // by subtracting ref_r from all rows
+        matrix2<T> split(int col1, int col2);                       // gives new matrix with columns
+                                                                    // col1 (incl.) to col2 (excl.)
 };
 
 
@@ -290,9 +299,24 @@ template <class T> matrix2<T> matrix2<T>::generateIdentity(int size) {
     return ans;
 }
 
+// creates a new matrix by joining this with mat
+template <class T> matrix2<T> matrix2<T>::join(matrix2<T> mat) {
+    if(rows != mat.rows) return *(new matrix2<T>());
+    matrix2<T> ans(rows, cols + mat.cols);
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            ans.data[i * ans.cols + j] = data[i * cols + j];
+        }
+        for(int j = 0; j < mat.cols; j++) {
+            ans.data[i * ans.cols + j + cols] = mat.data[i * cols + j];
+        }
+    }
+    return ans;
+}
+
 // r1 <-> r2
 template <class T> void matrix2<T>::switchRows(int r1, int r2) {
-    if(r1 < 0 || r2 < 0 || r1 >= rows || r2 >= rows) return;
+    if(r1 < 0 || r2 < 0 || r1 >= rows || r2 >= rows || r1 == r2) return;
     T temp;
     for(int i = 0; i < cols; i++){
         temp = data[r1 * cols + i];
@@ -312,9 +336,57 @@ template <class T> void matrix2<T>::multiplyToRow(int r, const T m) {
 // d -> d + m*s
 template <class T> void matrix2<T>::addMultipleToRow(int d, int s, const T m) {
     if(d < 0 || s < 0 || d >= rows || s >= rows) return;
+    if(m == 0) return;
     for(int i = 0; i < cols; i++) {
         data[d * cols + i] += data[s * cols + i] * m;
     }
+}
+
+// gets row value of 1st non-zero elem in column c, starts searching from row sr
+template <class T> int matrix2<T>::getNonZeroElem(int sr, int c) {
+    if(sr < 0 || sr >= rows || c < 0 || c >= cols) return -1;
+    for(int i = sr; i < rows; i++) {
+        if(data[i * cols + c] != 0) return i;
+    }
+    return -1;
+}
+
+// trys to swap sr with the first row under it with a non-zero element in column c
+template <class T> bool matrix2<T>::swapWithFirstNonZeroElem(int sr, int c) {
+    int i = getNonZeroElem(sr, c);
+    if(i == -1) return false;
+    switchRows(sr, i);
+    return true;
+}
+
+// zero out element (dst_r, c) by subtracting out row ref_r from dst_r
+template <class T> bool matrix2<T>::zeroOutElem(int ref_r, int dst_r, int c) {
+    if(ref_r < 0 || ref_r >= rows || dst_r < 0 || dst_r >= rows || c < 0 || c >= cols) return false;
+    if(data[ref_r * cols + c] == 0) return false;
+    addMultipleToRow(dst_r, ref_r, - data[dst_r * cols + c] / data[ref_r * cols + c]);
+    return true;
+}
+
+// zero out all other elements in column c by subtracting ref_r from all rows
+template <class T> bool matrix2<T>::zeroOutCol(int ref_r, int c) {
+    if(ref_r < 0 || ref_r >= rows || c < 0 || c >= cols) return false;
+    if(data[ref_r * cols + c] == 0) return false;
+    for(int i = 0; i < rows; i++) {
+        if(i != ref_r) zeroOutElem(ref_r, i, c);
+    }
+    return true;
+}
+
+// gives new matrix with columns col1 (incl.) to col2 (excl.)
+template <class T> matrix2<T> matrix2<T>::split(int col1, int col2) {
+    if(col1 < 0 || col2 > cols || col1 >= col2) return *(new matrix2<T>());
+    matrix2<T> ans(rows, col2 - col1);
+    for(int i = 0; i < rows; i++) {
+        for(int j = col1; j < col2; j++) {
+            ans.data[i * ans.cols + j - col1] = data[i * cols + j];
+        }
+    }
+    return ans;
 }
 
 #endif // !MATRIX_H
