@@ -76,6 +76,7 @@ class matrix2 {         //template class for 2d matrix
                                                                     // by subtracting ref_r from all rows
         matrix2<T> split(int col1, int col2);                       // gives new matrix with columns
                                                                     // col1 (incl.) to col2 (excl.)
+        matrix2<T> inverse();                       // return inverse of this matrix
 };
 
 
@@ -387,6 +388,19 @@ template <class T> matrix2<T> matrix2<T>::split(int col1, int col2) {
         }
     }
     return ans;
+}
+
+// gives inverse of this matrix
+template <class T> matrix2<T> matrix2<T>::inverse() {
+    if(rows != cols || rows == 0 || cols == 0)  return *(new matrix2<T>());
+    matrix2<T> augment = join(generateIdentity(rows));
+    for(int i = 0; i < rows; i++) {
+        if(augment.swapWithFirstNonZeroElem(i, i) == false)
+            return *(new matrix2<T>());
+        augment.multiplyToRow(i, 1 / augment.data[i * 2 * cols + i]);
+        augment.zeroOutCol(i, i);
+    }
+    return augment.split(cols, 2*cols);
 }
 
 #endif // !MATRIX_H

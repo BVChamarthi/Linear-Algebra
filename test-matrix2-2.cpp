@@ -31,9 +31,15 @@ int main() {
     matrix2<double> i4 = i3.join(matrix2<double>::generateIdentity(4));
     i4.print();
 
-    std::cout << "\nTest 7: i5 = i4.split(4, 8)\n";
-    matrix2<double> i5 = i4.split(4, 8);
+    std::cout << "\nTest 8: i5 = i3.inverse()\n";
+    matrix2<double> i5 = i3.inverse();
     i5.print();
+
+    std::cout << "\nTest 9: check i3 * i5\n";
+    (i3 * i5).print();
+
+    std::cout << "\nTest 10: check i5 * i3\n";
+    (i5 * i3).print(); 
 
     return 0;
 }
