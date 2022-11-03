@@ -77,6 +77,13 @@ class matrix2 {         //template class for 2d matrix
         matrix2<T> split(int col1, int col2);                       // gives new matrix with columns
                                                                     // col1 (incl.) to col2 (excl.)
         matrix2<T> inverse();                       // return inverse of this matrix
+
+        // transpose of a matrix
+        matrix2<T> transpose();
+
+        // determinant of a matrix
+        matrix2<T> subMat();            // gives a submatrix of current matrix, with first row and first column removed 
+        T det();
 };
 
 
@@ -401,6 +408,61 @@ template <class T> matrix2<T> matrix2<T>::inverse() {
         augment.zeroOutCol(i, i);
     }
     return augment.split(cols, 2*cols);
+}
+
+
+/*******************************************************************************************************
+FUNCTION FOR GIVING TRANSPOSE OF MATRIX
+*******************************************************************************************************/
+template <class T> matrix2<T> matrix2<T>::transpose() {
+    matrix2<T> ans(cols, rows);
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            ans.data[j * rows + i] = data[i * cols + j];
+        }
+    }
+    return ans;
+}
+
+
+/*******************************************************************************************************
+FUNCTIONS FOR CALCULATING DETERMINANT
+*******************************************************************************************************/
+// gives a submatrix of current matrix, with first row and first column removed
+template <class T> matrix2<T> matrix2<T>::subMat() {
+    if(rows < 1 || cols < 1) return *(new matrix2<T>());
+    matrix2<T> ans(rows-1, cols-1);
+    for(int i = 1; i < rows; i++){
+        for(int j = 1; j < cols; j++) {
+            ans.data[(i-1) * (cols-1) + (j-1)] = data[i * cols + j];
+        }
+    }
+    return ans;
+}
+
+template <class T> T matrix2<T>::det() {
+    if(rows != cols || rows == 0 || cols == 0) return 0;
+
+    // base case: size = 1
+    if(rows == 1) return data[0];
+
+    // recursive step
+    matrix2<T> mat = *this;
+    T d = 1;                            // tracker for determinant
+
+    int r = mat.getNonZeroElem(0, 0);   // find row with non zero elem in column 0
+    if(r == -1) return 0;               // no non-zero elem in the column, det = 0
+    if(r != 0) {                        // if non-zero element is in a diff. row, switch rows
+        d = -1;
+        mat.switchRows(0, r);
+    }
+    if(mat.data[0] != 1) {              // if element(0, 0) is not one, make it one, update d
+        d = d * mat.data[0];
+        mat.multiplyToRow(0, 1/data[0]);
+    }
+    mat.zeroOutCol(0, 0);                   // zero out column with row 0 as ref
+
+    return d * mat.subMat().det();          // recursive call
 }
 
 #endif // !MATRIX_H

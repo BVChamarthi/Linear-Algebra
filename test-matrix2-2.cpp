@@ -39,7 +39,10 @@ int main() {
     (i3 * i5).print();
 
     std::cout << "\nTest 10: check i5 * i3\n";
-    (i5 * i3).print(); 
+    (i5 * i3).print();
+
+    std::cout << "\nTest 11: det(i3) = " << i3.det();
+    std::cout << "\nTest 12: det(i5) = " << i5.det();
 
     return 0;
 }
